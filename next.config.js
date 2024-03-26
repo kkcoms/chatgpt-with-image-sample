@@ -8,7 +8,7 @@ const nextConfig = {
     return config
   },
   env: {
-    siteTitle: 'Chat with Image + DALL·E',
+    siteTitle: 'Dry Cleaning Chatbot',
     maxFileUploadCount: 10,
   },
   trailingSlash: true,

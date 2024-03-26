@@ -1,15 +1,9 @@
 import fs from 'fs'
 import path from 'path'
-import { promisify } from 'util'
-import { pipeline } from 'stream'
-import { chatCompletion, imageCompletion } from '../../services/openai'
-import { trim_array, compact, parse_markdown_image_link } from '../../lib/utils'
-import create_image_dalle from '../../assets/create_image_dall-e.json'
+import { chatCompletion } from '../../services/openai'
+import { trim_array, compact } from '../../lib/utils'
 import get_image_for_analysis from '../../assets/get_image_for_analysis.json'
-//import get_image_info from '../../assets/get_image_info.json'
 import captions from '../../assets/captions.json'
-
-const streamPipeline = promisify(pipeline)
 
 function base64_encode(file) {
     try {
@@ -47,10 +41,21 @@ const useVision = async (args, inquiry = '', context = []) => {
         return { status: 'error', message: 'Failed to make analysis. No image found' }
     }
 
-    let system_prompt = `You are a helpful assistant.\n` +
-        `You are an expert in analysing images and you will help the user in their inquiries related to the images included.\n\n` +
-        `Today is ${new Date()}`
-
+    let system_prompt = `You are a helpful and knowledgeable assistant for a dry cleaning business, adept at analyzing images and engaging customers in detailed conversations to provide accurate and personalized service information. Your extensive database includes garment types, fabric materials, stain types, treatment options, and pricing strategies. When a customer presents a query, especially those involving image-based stain assessment, you're equipped to offer initial observations, make assumptions, provide a preliminary estimate, and then engage the customer with specific questions to narrow down the details for a more accurate estimate and tailored service recommendation.\n\n` +
+    `Your capabilities have been enhanced to include:\n\n` +
+    `- **Interactive FAQs Handling**: Actively engage in dialogue to understand and fully address customer inquiries, using back-and-forth communication to clarify details and provide comprehensive answers.\n` +
+    `- **Precise Price Estimates**: Initially offer estimates based on general observations and assumptions. Refine these estimates to provide narrower price ranges based on detailed information obtained from the customer's responses about fabric type, garment complexity, and specific stain treatments required.\n` +
+    `- **Detailed Stain Assessment**: Analyze customer-provided images to identify stain types and fabric materials. Use this analysis along with follow-up questions to recommend the most appropriate cleaning treatments and provide accurate cost estimations.\n` +
+    `- **Customized Service Recommendations**: Based on the conversation, suggest specific cleaning options and care tips tailored to the customer's unique needs, enhancing the personalized service experience.\n` +
+    `- **Comprehensive Support**: Throughout the interaction, offer guidance on scheduling a drop-off, information about touchless service options, and any other support the customer may require, ensuring they feel heard and assisted at every step.\n\n` +
+    `Example interaction flow to ensure a dynamic and responsive dialogue:\n\n` +
+    `1. "Based on the image you've provided and my initial assessment, it looks like the garment is a cotton shirt with oil-based stains, typically from food. Cleaning and stain removal for such items generally range from $5 to $10. Can you confirm the fabric type and how recent the stain is for a more precise estimate?"\n` +
+    `2. "Given the details you've provided, especially if the stain is recent, we recommend our specialized stain removal process. The adjusted cost, considering it's a cotton fabric and based on the stain's complexity, could range from $7 to $12. Would you like to proceed with scheduling a drop-off for a more detailed assessment?"\n` +
+    `3. "Is there anything else you need assistance with? Perhaps information on our care treatments for different fabrics or our touchless drop-off and payment options?"\n\n` +
+    `This comprehensive approach is designed to simulate a friendly and efficient service representative, providing answers that are not only helpful and accurate but also tailored specifically to the customer's needs and inquiries. Your ultimate goal is to deliver a service experience that is informative, engaging, and reassuring, ensuring every customer feels valued and supported.\n` +
+    `Today is ${new Date()}.`;
+    
+    
     let messages = [{ role: 'system', content: system_prompt }]
     if(context.length > 0) {
         messages = messages.concat(context)
@@ -89,90 +94,7 @@ const useVision = async (args, inquiry = '', context = []) => {
 
     }
 
-    //return { status: 'busy', message: 'server is currently busy. please try again later.' }
     return result_output
-
-}
-
-const useDalle = async (args, lang = 0) => {
-    
-    const image_items = args.items
-
-    let image_result = await Promise.all(
-        Array.from(image_items).map(async (img) => {
-
-            const image_prompt = img.prompt
-            // use img.size if you want to use the size from function calling
-            const image_size = img.size //'1024x1024' // img.size
-            const image_quality = img.quality
-            
-            try {
-
-                const dalle_image = await imageCompletion({ 
-                    //model: 'dall-e-2', // uncomment this if you want to use dall-e 2 instead of dall-e 3
-                    prompt: image_prompt,
-                    quality: image_quality,
-                    size: image_size
-                })
-
-                return {
-                    prompt: image_prompt,
-                    url: dalle_image.data[0].url
-                }
-
-            } catch(error) {
-
-                console.log(error.name, error.message)
-                
-                return null
-
-            }
-
-        })
-    )
-    image_result = compact(image_result)
-        
-    let image_list = await Promise.all(
-        Array.from(image_result).map(async (img) => {
-            
-            const urlObject = new URL(img.url)
-            const pathname = urlObject.pathname
-            const parts = pathname.split('/')
-            const name = parts[parts.length - 1]
-
-            const filename = `tmp-${Date.now()}-${name}`
-            let filepath = path.join('public', 'uploads', filename)
-
-            const data_response = await fetch(img.url)
-
-            console.log(img.url)
-
-            try {
-
-                await streamPipeline(data_response.body, fs.createWriteStream(filepath))
-
-                return {
-                    url: `/uploads/${filename}`,
-                    alt: `${img.prompt}`
-                }
-
-            } catch(error) {
-
-                console.log(name, error)
-
-                return null
-
-            }
-
-        })
-    )
-    image_list = compact(image_list)
-
-    return image_list.length > 0 ? { 
-        status: 'image generated',
-        message: image_list.length > 1 ? captions.done_here_are_the_images[lang] : captions.done_here_is_the_image[lang], 
-        images: image_list 
-    } : { error: true, status: 'image creation error', message: 'There is a problem creating your image' }
 
 }
 
@@ -191,26 +113,28 @@ export async function POST(request) {
     let isImageExist = image && Array.isArray(image) && image.length > 0
 
     const tools = [
-        { type: 'function', function: create_image_dalle },
         { type: 'function', function: get_image_for_analysis },
     ]
     
     let system_prompt = `You are a helpful assistant.\n`
         
-    let general_prompt = `When the user wants to know create an image, it means they want to create an image using DALL-E 3 and you will help them to write the prompt for DALL-E.\n` +
-        `When creating prompt for image creation, do not make up your own prompt.\n` +
-        `Ask the user their own ideas of what image they want to be.\n` +
-        `If the description is vague, clarify to the user some elements to make it clearer.` +
-        `Confirm to the user the image prompt before calling create_image_dall-e 3.\n` +
-        `If possible, give them several variations of possible prompts.\n` +
-        `When the user wants to analyse image data from chat history, call get_image_for_analysis function.\n` +
-        `Be sure to include all the details when filling the query parameter so that we can analyze the picture accurately based on user query.\n`
-    
-    let vision_prompt = `You are an expert in analysing images and you will help the user in their inquiries related to the images included.\n`
+    let vision_prompt = `You are a helpful and knowledgeable assistant for a dry cleaning business, adept at analyzing images and engaging customers in detailed conversations to provide accurate and personalized service information. Your extensive database includes garment types, fabric materials, stain types, treatment options, and pricing strategies. When a customer presents a query, especially those involving image-based stain assessment, you're equipped to offer initial observations, make assumptions, provide a preliminary estimate, and then engage the customer with specific questions to narrow down the details for a more accurate estimate and tailored service recommendation.\n\n` +
+    `Your capabilities have been enhanced to include:\n\n` +
+    `- **Interactive FAQs Handling**: Actively engage in dialogue to understand and fully address customer inquiries, using back-and-forth communication to clarify details and provide comprehensive answers.\n` +
+    `- **Precise Price Estimates**: Initially offer estimates based on general observations and assumptions. Refine these estimates to provide narrower price ranges based on detailed information obtained from the customer's responses about fabric type, garment complexity, and specific stain treatments required.\n` +
+    `- **Detailed Stain Assessment**: Analyze customer-provided images to identify stain types and fabric materials. Use this analysis along with follow-up questions to recommend the most appropriate cleaning treatments and provide accurate cost estimations.\n` +
+    `- **Customized Service Recommendations**: Based on the conversation, suggest specific cleaning options and care tips tailored to the customer's unique needs, enhancing the personalized service experience.\n` +
+    `- **Comprehensive Support**: Throughout the interaction, offer guidance on scheduling a drop-off, information about touchless service options, and any other support the customer may require, ensuring they feel heard and assisted at every step.\n\n` +
+    `Example interaction flow to ensure a dynamic and responsive dialogue:\n\n` +
+    `1. "Based on the image you've provided and my initial assessment, it looks like the garment is a cotton shirt with oil-based stains, typically from food. Cleaning and stain removal for such items generally range from $5 to $10. Can you confirm the fabric type and how recent the stain is for a more precise estimate?"\n` +
+    `2. "Given the details you've provided, especially if the stain is recent, we recommend our specialized stain removal process. The adjusted cost, considering it's a cotton fabric and based on the stain's complexity, could range from $7 to $12. Would you like to proceed with scheduling a drop-off for a more detailed assessment?"\n` +
+    `3. "Is there anything else you need assistance with? Perhaps information on our care treatments for different fabrics or our touchless drop-off and payment options?"\n\n` +
+    `This comprehensive approach is designed to simulate a friendly and efficient service representative, providing answers that are not only helpful and accurate but also tailored specifically to the customer's needs and inquiries. Your ultimate goal is to deliver a service experience that is informative, engaging, and reassuring, ensuring every customer feels valued and supported.\n` +
+    `Today is ${new Date()}.`;
     
     let today = `Today is ${new Date()}.`
 
-    system_prompt += isImageExist ? vision_prompt : general_prompt
+    system_prompt += isImageExist ? vision_prompt : ''
     system_prompt += today
 
     let messages = [{ role: 'system', content: system_prompt }]
@@ -258,7 +182,6 @@ export async function POST(request) {
 
         let tool_response = result.message
         let tool_outputs = []
-        let tool_images = []
 
         for(let tool of tool_response.tool_calls) {
 
@@ -269,22 +192,7 @@ export async function POST(request) {
 
             let tool_output_item = { status: 'error', message: 'sorry, function not found' }
 
-            if(tool_name === 'create_image_dall-e') {
-
-                tool_output_item = await useDalle(tool_args)
-
-                if(!tool_output_item.error) {
-
-                    // we are separating the image data
-                    // we will not include it when we submit the response back for summary
-                    let { images, ...others } = tool_output_item
-
-                    tool_images = images
-                    tool_output_item = others
-
-                }
-
-            } else if(tool_name === 'get_image_for_analysis') {
+            if(tool_name === 'get_image_for_analysis') {
 
                 tool_output_item = await useVision(tool_args, inquiry, prev_data)
 
@@ -314,11 +222,6 @@ export async function POST(request) {
             })
 
             console.log('summary', result)
-            console.log("images", tool_images)
-
-            if(tool_images.length > 0) {
-                result.message.image = tool_images
-            }
 
         } catch(error) {
             
@@ -326,32 +229,6 @@ export async function POST(request) {
 
         }
         
-    } else {
-
-        // in case the AI respond with markdown image
-        // we will extract the image urls
-
-        let tmp_content = result.message.content.split('\n')
-
-        let tmp_images = tmp_content.filter((tmp) => {
-            return tmp.indexOf('![') >= 0
-        }).map((tmp) => {
-            
-            const tmp_data = parse_markdown_image_link(tmp)
-            
-            return {
-                alt: tmp_data[0],
-                url: tmp_data[1].split(' ')[0]
-            }
-
-        })
-
-        if(tmp_images.length > 0) {
-            
-            result.message.image = tmp_images
-
-        }
-
     }
 
     return new Response(JSON.stringify({
