@@ -3,6 +3,67 @@
     height: 100vh;
 }
 
+
+.headerTextshort {
+    font-size: 24px; /* Set font size larger than the messages */
+    font-weight: bold; /* Make the font weight bold */
+    color: #333; /* Set a darker color for better clarity */
+    margin-top: 40px; /* Add some space below the header */
+    margin-left: 20px;
+    text-align: left; /* Center the header text */
+    width: 100%; /* Ensure the div takes full width if needed */
+  }
+
+
+.headerTextdesc {
+    font-size: 16px; /* Set font size larger than the messages */
+    font-weight: normal; /* Make the font weight bold */
+    color: #505050; /* Set a darker color for better clarity */
+    margin-left: 20px;
+    text-align: left; /* Center the header text */
+    width: 100%; /* Ensure the div takes full width if needed */
+  }
+
+  
+.messageList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.starterMessage {
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  align-self: flex-start;
+  max-width: 80%;
+  margin-bottom: 5px;
+}
+
+.starterMessage:hover {
+  background-color: #e0e0e0;
+}
+
+.text {
+  margin: 0;
+}
+
+.input {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #f5f5f5;
+}
+
+.chat {
+  flex-grow: 1;
+  margin-left: 10px;
+}
 .main {
     position: relative;
     height: 100%;
