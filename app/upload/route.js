@@ -1,39 +1,31 @@
-import fs from 'fs'
-import path from 'path'
+import { put } from '@vercel/blob';
 
 export async function POST(req) {
-    
-    const form = await req.formData()
-    
-    const blob = form.get('file')
-    const name = form.get('name')
+  const form = await req.formData();
+  const blob = form.get('file');
+  const name = form.get('name');
 
-    const upload_dir = 'uploads'
+  try {
+    const filename = `tmp${Date.now()}${Math.round(Math.random() * 100000)}_${name}`;
 
-    const buffer = Buffer.from(await blob.arrayBuffer())
-    const filename = `tmp${Date.now()}${Math.round(Math.random() * 100000)}_${name}`
-    
-    let filepath = `${path.join('public', upload_dir, filename)}`
+    const uploadedBlob = await put(filename, blob, {
+      access: 'public',
+    });
 
-    let error_flag = false
-
-    try {
-
-        fs.writeFileSync(filepath, buffer)
-
-    } catch(error) {
-
-        console.log(error)
-
-        error_flag = true
-
-    }
-    
     return new Response(JSON.stringify({
-        name,
-        url: error_flag ? '' : `/${upload_dir}/${filename}`
+      name,
+      url: uploadedBlob.url,
     }), {
-        status: 200,
-    })
+      status: 200,
+    });
+  } catch (error) {
+    console.log(error);
 
+    return new Response(JSON.stringify({
+      name,
+      url: '',
+    }), {
+      status: 500,
+    });
+  }
 }
