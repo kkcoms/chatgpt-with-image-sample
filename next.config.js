@@ -8,7 +8,7 @@ const nextConfig = {
     return config
   },
   env: {
-    siteTitle: 'Dry Cleaning Chatbot',
+    siteTitle: 'Dry Cleaning Chatbot - Powered by AI',
     maxFileUploadCount: 10,
   },
   trailingSlash: true,

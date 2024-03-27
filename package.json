@@ -1,5 +1,5 @@
 {
-  "name": "chatgpt-with-image-sample",
+  "name": "dry-cleaning-chatbot-with-gpt-4-vision",
   "version": "0.0.2",
   "description": "A sample project that integrates GPT-4 Vision in a Chat application.",
   "scripts": {
@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start"
   },
-  "author": "supershaneski",
+  "author": "Jake Barrera",
   "license": "MIT",
   "dependencies": {
     "@emotion/react": "^11.11.1",

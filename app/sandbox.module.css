@@ -1,28 +1,35 @@
-.container {
+/* .container {
     position: relative;
     height: 100vh;
-}
+} */
+
 
 
 .headerTextshort {
     font-size: 24px; /* Set font size larger than the messages */
     font-weight: bold; /* Make the font weight bold */
     color: #333; /* Set a darker color for better clarity */
-    margin-top: 40px; /* Add some space below the header */
+    margin-top: 10px; /* Add some space below the header */
     margin-left: 20px;
     text-align: left; /* Center the header text */
     width: 100%; /* Ensure the div takes full width if needed */
+    padding-right: 85px; /* Add padding for internal spacing */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    overflow: hidden; /* Prevents child elements from overflowing */
   }
-
 
 .headerTextdesc {
-    font-size: 16px; /* Set font size larger than the messages */
-    font-weight: normal; /* Make the font weight bold */
-    color: #505050; /* Set a darker color for better clarity */
-    margin-left: 20px;
-    text-align: left; /* Center the header text */
-    width: 100%; /* Ensure the div takes full width if needed */
-  }
+  font-size: 16px; /* Set font size appropriately */
+  font-weight: normal; /* Normal font weight, not bold */
+  color: #505050; /* Darker color for clarity */
+  margin: 20px; /* Add margin to all sides for consistency, or just keep left margin if preferred */
+  text-align: left; /* Align text to the left */
+  width: 100%; /* Full width */
+  padding-right: 85px; /* Add padding for internal spacing */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  overflow: hidden; /* Prevents child elements from overflowing */
+}
+
 
   
 .messageList {
@@ -31,7 +38,7 @@
   gap: 10px;
   padding: 20px;
   overflow-y: auto;
-  flex-grow: 1;
+  /* flex-grow: 1; */
 }
 
 .starterMessage {
@@ -80,7 +87,7 @@
     margin: 0;
     text-align: center;
 }
-
+/* 
 .messageList {
     position: relative;
     height: calc(100% - (90px + 50px));
@@ -88,7 +95,7 @@
     overflow-y: auto;
     box-sizing: border-box;
     scroll-behavior: smooth;
-}
+} */
 
 .messageItem {
     padding: 1rem 1rem 0 1rem;
@@ -137,20 +144,29 @@
 }
 .imageList {
     position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    margin: 1rem 0;
+    /* display: flex; */
+    flex-wrap: wrap; /* This allows the images to wrap within the container */
+    align-items: flex-start; /* Aligns items to the start of the container */
+    justify-content: center; /* Centers the images horizontally if there is extra space */
+    gap: 10px; /* Provides space between images */
+    margin: 1rem 0; /* Top and bottom margin for the whole list */
+    padding: 0; /* Removes padding to align images to the edge of the container */
 }
+
 .image, .imageOut {
     background-color: #fafafa;
     background-image: linear-gradient(45deg, #9995 25%, transparent 25%, transparent 75%, #9995 75%), linear-gradient(45deg, #9995 25%, transparent 25%, transparent 75%, #9995 75%);
     background-position: 0 0, 10px 10px;
     background-size: calc(10px * 2) calc(10px * 2);
     position: relative;
-    object-fit: contain;
+    object-fit: fill; /* Adjust the object-fit property */
     z-index: 1;
     display: block;
+    width: 100%; /* Ensure the image does not exceed the container width */
+    height: auto; /* Adjust the height automatically to maintain the aspect ratio */
+    max-height: 100%; /* Optional: Ensure the image does not exceed the container height */
 }
+
 .desc {
     font-size: .8rem;
     font-style: italic;
@@ -164,12 +180,12 @@
     background-color: #f2f2f2; /*e6e6e6*/
     border-bottom-right-radius: 0;
 }
-.system {
+/* .system {
     background-color: #ffe6e6;
     border-bottom-left-radius: 0;
-}
+} */
 
-.input {
+/* .input {
     background-color: var(--color-background);
     position: fixed;
     left: 0;
@@ -178,7 +194,7 @@
     z-index: 3;
     display: flex;
     align-items: center;
-}
+} */
 .retry {
     position: relative;
     z-index: 1;
@@ -453,7 +469,7 @@
     }
     .image {
         width: auto;
-        max-width: 100%;
+        max-width: 180%;
         height: 300px;
     }
     .imageOut {
